@@ -1070,12 +1070,37 @@ async function main(userlandRW, wkOnly = false) {
 
     await new Promise(resolve => setTimeout(resolve, 300));
     await switchPage("payloads-view");
+    // ==========================================
+// 1. قائمة الملفات التي سيتم تشغيلها تلقائياً
+// ==========================================
+const autoPayloads = [
+    { fileName: "kstuff.elf", displayTitle: "KStuff" },
+    { fileName: "ftpsrv-ps5.elf", displayTitle: "FTP Server" },
+    { fileName: "gdbsrv-ps5.elf", displayTitle: "GDB Server" },
+    { fileName: "klogsrv-ps5.elf", displayTitle: "KLog Server" },
+    { fileName: "shsrv-ps5.elf", displayTitle: "Shell Server" },
+    { fileName: "websrv-ps5.elf", displayTitle: "Web Server" },
+    { fileName: "web-file-mgr-v1.1.elf", displayTitle: "Web File Manager" }
+];
 
+// إدراج كافة الملفات تلقائياً في طابور التنفيذ
+for (const payload of autoPayloads) {
+    let toast = showToast(`${payload.displayTitle}: في طابور التشغيل التلقائي...`, -1);
+    queue.push({ payload_info: payload, toast });
+}
     while (true) {
 
         if (queue.length > 0) {
 
             let { payload_info, toast } =  (queue.shift());
+
+            // ==========================================
+        // 2. عدّاد 3 ثواني قبل تفعيل الملف الحالي
+        // ==========================================
+        for (let sec = 3; sec > 0; sec--) {
+            updateToastMessage(toast, `${payload_info.displayTitle}: سيبدأ التشغيل خلال ${sec} ثوانٍ...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
 
             try {
                 if (payload_info.customAction) {
