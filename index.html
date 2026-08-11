@@ -78,7 +78,9 @@
   <div id="status"></div>
 </div>
 
-<script>try {
+<script>
+// الأكواد الأساسية للصفحة
+try {
     var q = new URLSearchParams(location.search);
     var start = document.getElementById("start");
     start.focus();
@@ -89,6 +91,21 @@ try {
         this.style.display = "none";
     });
 } catch (e) {}
+
+// ====================================================
+// كود التشغيل التلقائي بعد 3 ثواني
+window.onload = function() {
+    function loadPayloadFiles() {
+        var startButton = document.getElementById("start");
+        if(startButton) {
+            console.log("تم بدء قراءة ملفات البايلود تلقائياً.");
+            startButton.click(); // هذا الأمر يقوم بالضغط على الزر برمجياً لفتح البايلود
+        }
+    }
+
+    setTimeout(loadPayloadFiles, 3000);
+};
+// ====================================================
 </script>
 
 </body>
