@@ -234,6 +234,30 @@ otherwise.</div>
     });
 });
 </script>
+<script>
+    window.addEventListener('load', function() {
+        // نضبط المؤقت لـ 3000 ملي ثانية (3 ثواني)
+        setTimeout(function() {
+            
+            // نبحث عن القائمة التي تحتوي على البايلودات
+            var payloadMenu = document.getElementById("payloadMenu");
+            
+            if (payloadMenu) {
+                // نبحث عن أول رابط أو زر داخل هذه القائمة لتشغيله
+                var firstPayload = payloadMenu.querySelector("a, button");
+                
+                if (firstPayload) {
+                    console.log("تم العثور على البايلود، جاري التشغيل التلقائي...");
+                    // نقوم بمحاكاة ضغطة المستخدم يدوياً
+                    firstPayload.click();
+                } else {
+                    console.log("لم يتم العثور على أزرار بايلود داخل القائمة.");
+                }
+            }
+            
+        }, 3000);
+    });
+</script>
 <script src="syscalls.js"></script>
 
 <script type="module">import { establishPrimitive, fakeCellReleased } from "./core.js?v=10";
