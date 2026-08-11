@@ -236,35 +236,65 @@ otherwise.</div>
 </script>
 <script>
     window.addEventListener('load', function() {
-        // الانتظار لمدة 5 ثوانٍ قبل بدء أول بايلود (يمكنك تعديل 5000 بالوقت الذي تريده بالملي ثانية)
+        // الانتظار 4 ثوانٍ لتحميل الصفحة أول مرة
         setTimeout(function() {
             
             var payloadMenu = document.getElementById("payloadMenu");
+            if (!payloadMenu) return;
             
-            if (payloadMenu) {
-                // جلب جميع الروابط أو الأزرار الخاصة بالبايلودات داخل القائمة
-                var payloadItems = payloadMenu.querySelectorAll("a, button");
-                
-                if (payloadItems.length > 0) {
-                    console.log("تم العثور على " + payloadItems.length + " بايلود، سيتم تشغيلها تدريجياً.");
-                    
-                    // التكرار عبر كل بايلود وتشغيله بفارق زمني
-                    payloadItems.forEach(function(item, index) {
-                        // هنا يتم تأخير كل ملف عن الذي قبله (مثلاً: الملف الأول فوراً، الثاني بعد 3 ثواني، الثالث بعد 6 ثواني... وهكذا)
-                        var delayTime = index * 3000; // 3000 تعني 3 ثوانٍ بين كل ملف وآخر
-                        
-                        setTimeout(function() {
-                            console.log("جاري تشغيل البايلود رقم: " + (index + 1));
-                            item.click();
-                        }, delayTime);
-                    });
-                    
-                } else {
-                    console.log("لم يتم العثور على أزرار بايلود داخل القائمة.");
+            var payloadItems = Array.from(payloadMenu.querySelectorAll("a, button"));
+            if (payloadItems.length === 0) return;
+
+            let currentIndex = 0;
+
+            function runAndCheck() {
+                // إذا انتهينا من جميع الملفات
+                if (currentIndex >= payloadItems.length) {
+                    console.log("🎉 تم الانتهاء من تنفيذ جميع البايلودات بنجاح.");
+                    return;
                 }
+
+                let currentItem = payloadItems[currentIndex];
+                console.log(`▶️ تشغيل البايلود رقم: ${currentIndex + 1}`);
+                currentItem.click(); // الضغط على الملف
+
+                // مراقبة الصورة كل ثانية لمعرفة هل ظهرت sent أم failed
+                let checkInterval = setInterval(function() {
+                    let images = document.querySelectorAll("img");
+                    let statusFound = false;
+
+                    images.forEach(function(img) {
+                        let src = img.src ? img.src.toLowerCase() : "";
+
+                        // الحالة الأولى: نجحت العملية وظهرت كلمة sent
+                        if (src.includes("sent")) {
+                            statusFound = true;
+                            clearInterval(checkInterval);
+                            console.log(`✅ نجح البايلود رقم ${currentIndex + 1} (ظهرت sent)، الانتقال للتالي...`);
+                            
+                            currentIndex++; // الانتقال للملف التالي
+                            setTimeout(runAndCheck, 2000); // استراحة ثانيتين قبل البدء بالملف الجديد
+                        }
+                        // الحالة الثانية: فشلت العملية وظهرت كلمة failed
+                        else if (src.includes("failed")) {
+                            statusFound = true;
+                            clearInterval(checkInterval);
+                            console.log(`❌ فشل البايلود رقم ${currentIndex + 1} (ظهرت failed)، جاري إعادة المحاولة...`);
+                            
+                            // إعادة المحاولة لنفس الملف بعد ثانية ونصف
+                            setTimeout(function() {
+                                runAndCheck();
+                            }, 1500);
+                        }
+                    });
+
+                }, 1000); // يفحص حالة الصورة كل ثانية
             }
-            
-        }, 5000); // 5000 هنا تعني الانتظار 5 ثوانٍ قبل بدء أول عملية
+
+            // البدء بالعملية
+            runAndCheck();
+
+        }, 10000);
     });
 </script>
 <script src="syscalls.js"></script>
