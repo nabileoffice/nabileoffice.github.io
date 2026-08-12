@@ -234,53 +234,63 @@ otherwise.</div>
 </script>
 <script>
 window.addEventListener('load', function() {
-    // انتظار 3 ثوانٍ عند فتح الصفحة لضمان استقرار الواجهة
+    // ننتظر 3 ثوانٍ لضمان تحميل الواجهة
     setTimeout(function() {
         
-        function processPayloadsSequentially() {
+        var currentIndex = 0; // العداد الذي سيضمن عدم تكرار نفس الملف عند النجاح
+
+        function runPayload() {
             var payloadMenu = document.getElementById("payloadMenu");
             if (!payloadMenu) return;
 
-            // جلب جميع أزرار البايلود
+            // جلب الأزرار في كل مرة لتجنب مشاكل تحديث الصفحة
             var buttons = Array.from(payloadMenu.querySelectorAll("a, button, .action"));
-            
-            // البحث عن أول زر لم يتم إرساله بعد (الذي لا يحتوي على عبارة Sent to console)
-            var nextButton = buttons.find(function(btn) {
-                return !btn.innerText.includes("Sent to console");
-            });
 
-            // إذا أصبحت كل الأزرار تحتوي على Sent to console، فهذا يعني أن الجميع اكتمل بنجاح!
-            if (!nextButton) {
-                console.log("🎉 تم إرسال جميع البايلودات بنجاح إلى جهاز الـ PS5!");
+            // إذا وصل العداد لنهاية الملفات، نتوقف
+            if (currentIndex >= buttons.length) {
+                console.log("🎉 تم الانتهاء من جميع البايلودات بنجاح!");
                 return;
             }
 
-            console.log("▶️ جاري إرسال البايلود الحالي...");
-            nextButton.click(); // الضغط على الزر الحالي
+            var currentBtn = buttons[currentIndex];
+            console.log("▶️ جاري الضغط على البايلود رقم: " + (currentIndex + 1));
+            currentBtn.click(); // الضغط على البايلود
 
-            // مراقبة الزر الحالي كل ثانية حتى تظهر عبارة Sent to console
-            var attempts = 0;
+            // مراقبة الزر الحالي كل ثانية للبحث عن الصور sent أو failed
             var checkInterval = setInterval(function() {
-                attempts++;
-
-                // الشرط الأول: نجاح الإرسال وتغير حالة الزر
-                if (nextButton.innerText.includes("Sent to console")) {
+                
+                // نجلب الزر مرة أخرى في حال تم تحديثه
+                var freshButtons = document.getElementById("payloadMenu").querySelectorAll("a, button, .action");
+                var activeBtn = freshButtons[currentIndex];
+                
+                if (!activeBtn) {
                     clearInterval(checkInterval);
-                    console.log("✅ تم الإرسال بنجاح، الانتقال للملف التالي...");
-                    // انتظار ثانيتين استراحة للكونسول ثم الانتقال للملف التالي
-                    setTimeout(processPayloadsSequentially, 2000);
-                } 
-                // الشرط الثاني: إذا مرت 8 ثوانٍ ولم يُرسل (حدث فشل أو تعليق)، نعيد الضغط على نفس الزر
-                else if (attempts >= 8) {
-                    clearInterval(checkInterval);
-                    console.log("⚠️ تعذر الإرسال أو تأخر، إعادة الضغط على نفس الملف...");
-                    setTimeout(processPayloadsSequentially, 1000);
+                    return;
                 }
-            }, 1000);
+
+                // نقرأ محتوى الزر بالكامل (بما في ذلك روابط الصور التي بداخله)
+                var btnContent = activeBtn.innerHTML.toLowerCase();
+
+                // شرط النجاح: إذا وجدنا كلمة sent في مسار الصورة
+                if (btnContent.includes("sent")) {
+                    clearInterval(checkInterval);
+                    console.log("✅ نجح الملف، الانتقال للذي يليه...");
+                    currentIndex++; // نزيد العداد للانتقال للملف التالي
+                    setTimeout(runPayload, 2000); // استراحة ثانيتين قبل الضغط على الجديد
+                } 
+                // شرط الفشل: إذا وجدنا كلمة failed في مسار الصورة
+                else if (btnContent.includes("failed")) {
+                    clearInterval(checkInterval);
+                    console.log("❌ فشل الملف، جاري إعادة المحاولة...");
+                    // لا نزيد العداد لكي يعيد الضغط على نفس الملف
+                    setTimeout(runPayload, 2000); 
+                }
+
+            }, 1000); // فحص حالة الصورة كل ثانية
         }
 
-        // بدء التشغيل التلقائي الذكي
-        processPayloadsSequentially();
+        // بدء العملية
+        runPayload();
 
     }, 3000);
 });
