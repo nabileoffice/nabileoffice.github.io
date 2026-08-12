@@ -233,9 +233,9 @@ otherwise.</div>
     });
 });
 </script>
-    <script>
+  <script>
     window.addEventListener('load', function() {
-        // الانتظار 4 ثوانٍ لتحميل الصفحة أول مرة
+        // الانتظار 5 ثوانٍ لضمان تحميل الصفحة تماماً
         setTimeout(function() {
             
             var payloadMenu = document.getElementById("payloadMenu");
@@ -245,55 +245,63 @@ otherwise.</div>
             if (payloadItems.length === 0) return;
 
             let currentIndex = 0;
+            let checkTimer;   // متغير لحفظ مؤقت الثواني
+            let fallbackTimer; // متغير لحفظ مؤقت الـ 7 ثواني
 
-            function runAndCheck() {
+            function processCurrentPayload() {
                 // إذا انتهينا من جميع الملفات
                 if (currentIndex >= payloadItems.length) {
-                    console.log("🎉 تم الانتهاء من تنفيذ جميع البايلودات بنجاح.");
+                    console.log("🎉 تم الانتهاء من جميع ملفات البايلود بنجاح تام.");
                     return;
                 }
 
-                let currentItem = payloadItems[currentIndex];
-                console.log(`▶️ تشغيل البايلود رقم: ${currentIndex + 1}`);
-                currentItem.click(); // الضغط على الملف
+                // جلب الزر الحالي
+                let item = payloadItems[currentIndex];
+                console.log(`▶️ محاولة تشغيل البايلود رقم: ${currentIndex + 1}`);
+                item.click(); // الضغط على البايلود
 
-                // مراقبة الصورة كل ثانية لمعرفة هل ظهرت sent أم failed
-                let checkInterval = setInterval(function() {
-                    let images = document.querySelectorAll("img");
-                    let statusFound = false;
+                // 1. مراقبة حالة الفشل كل ثانية
+                checkTimer = setInterval(function() {
+                    // فحص الصورة الموجودة داخل الزر الحالي فقط! (وليس كل الشاشة)
+                    let imagesInsideItem = item.querySelectorAll("img");
+                    let hasFailed = false;
 
-                    images.forEach(function(img) {
+                    imagesInsideItem.forEach(function(img) {
                         let src = img.src ? img.src.toLowerCase() : "";
-
-                        // الحالة الأولى: نجحت العملية وظهرت كلمة sent
-                        if (src.includes("sent.png")) {
-                            statusFound = true;
-                            clearInterval(checkInterval);
-                            console.log(`✅ نجح البايلود رقم ${currentIndex + 1} (ظهرت sent.png)، الانتقال للتالي...`);
-                            
-                            currentIndex++; // الانتقال للملف التالي
-                            setTimeout(runAndCheck, 1000); // استراحة ثانيتين قبل البدء بالملف الجديد
-                        }
-                        // الحالة الثانية: فشلت العملية وظهرت كلمة failed
-                        else if (src.includes("failed.png")) {
-                            statusFound = true;
-                            clearInterval(checkInterval);
-                            console.log(`❌ فشل البايلود رقم ${currentIndex + 1} (ظهرت failed.png)، جاري إعادة المحاولة...`);
-                            
-                            // إعادة المحاولة لنفس الملف بعد ثانية ونصف
-                            setTimeout(function() {
-                                runAndCheck();
-                            }, 500);
+                        if (src.includes("failed")) {
+                            hasFailed = true;
                         }
                     });
 
-                }, 1000); // يفحص حالة الصورة كل ثانية
+                    // إذا ظهرت صورة تفيد بالفشل
+                    if (hasFailed) {
+                        clearInterval(checkTimer); // إيقاف فحص الثواني
+                        clearTimeout(fallbackTimer); // الأهم: إيقاف مؤقت الـ 7 ثواني لمنع التخطي!
+                        
+                        console.log(`❌ فشل البايلود رقم ${currentIndex + 1}، جاري إعادة المحاولة...`);
+                        
+                        setTimeout(function() {
+                            processCurrentPayload(); // إعادة المحاولة لنفس الملف
+                        }, 2000);
+                    }
+                }, 1000); 
+
+                // 2. فحص النجاح بعد 7 ثوانٍ من الضغط
+                fallbackTimer = setTimeout(function() {
+                    // إذا وصلنا إلى هنا بدون فشل، فهذا يعني أن الملف نجح
+                    clearInterval(checkTimer); // إيقاف فحص الثواني
+                    
+                    console.log(`✅ اكتمل وقت البايلود رقم ${currentIndex + 1}, الانتقال للبايلود التالي...`);
+                    currentIndex++; // الانتقال للملف التالي
+                    setTimeout(processCurrentPayload, 3000); // استراحة 3 ثوانٍ قبل تشغيل الملف التالي
+                    
+                }, 7000); // 7 ثوانٍ ليعمل الملف براحته
             }
 
-            // البدء بالعملية
-            runAndCheck();
+            // بدء التشغيل
+            processCurrentPayload();
 
-        }, 1000);
+        }, 5000);
     });
 </script>
 <script src="syscalls.js"></script>
