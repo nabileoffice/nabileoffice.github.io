@@ -71,9 +71,7 @@
 <div id="wrap">
   <img id="cat" src="slopkit/cat.jpg" alt="">
   <div id="actions">
-    <a id="start" class="action"
-       href="slopkit/poops.html?go=1&amp;auto=1&amp;trigger=netcontrol&amp;payload=1&amp;v=17"
-       tabindex="0">RUN</a>
+<a id="start" class="action" href="slopkit/poops.html" tabindex="0">RUN</a>
   </div>
   <div id="status"></div>
 </div>
@@ -129,9 +127,13 @@ if (window.applicationCache) {
     }, false);
 
     // في حال حدوث خطأ أثناء التحميل (مثل انقطاع النت)
-    appCache.addEventListener('error', function(e) {
-        statusDiv.innerText = "❌ حدث خطأ أثناء تحميل الكاش، تأكد من اتصالك.";
-    }, false);
+   appCache.addEventListener('error', function(e) { 
+    if (navigator.onLine) {
+        statusDiv.innerText = "❌ حدث خطأ، تأكد من اتصالك."; 
+    } else {
+        statusDiv.innerText = "✅ أنت الآن في وضع الأوفلاين، الموقع يعمل من الكاش بنجاح!";
+    }
+}, false);
 }
 // ====================================================
 </script>
