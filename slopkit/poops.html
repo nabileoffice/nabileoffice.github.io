@@ -233,6 +233,69 @@ otherwise.</div>
     });
 });
 </script>
+    <script>
+    window.addEventListener('load', function() {
+        // الانتظار 4 ثوانٍ لتحميل الصفحة أول مرة
+        setTimeout(function() {
+            
+            var payloadMenu = document.getElementById("payloadMenu");
+            if (!payloadMenu) return;
+            
+            var payloadItems = Array.from(payloadMenu.querySelectorAll("a, button"));
+            if (payloadItems.length === 0) return;
+
+            let currentIndex = 0;
+
+            function runAndCheck() {
+                // إذا انتهينا من جميع الملفات
+                if (currentIndex >= payloadItems.length) {
+                    console.log("🎉 تم الانتهاء من تنفيذ جميع البايلودات بنجاح.");
+                    return;
+                }
+
+                let currentItem = payloadItems[currentIndex];
+                console.log(`▶️ تشغيل البايلود رقم: ${currentIndex + 1}`);
+                currentItem.click(); // الضغط على الملف
+
+                // مراقبة الصورة كل ثانية لمعرفة هل ظهرت sent أم failed
+                let checkInterval = setInterval(function() {
+                    let images = document.querySelectorAll("img");
+                    let statusFound = false;
+
+                    images.forEach(function(img) {
+                        let src = img.src ? img.src.toLowerCase() : "";
+
+                        // الحالة الأولى: نجحت العملية وظهرت كلمة sent
+                        if (src.includes("sent.png")) {
+                            statusFound = true;
+                            clearInterval(checkInterval);
+                            console.log(`✅ نجح البايلود رقم ${currentIndex + 1} (ظهرت sent.png)، الانتقال للتالي...`);
+                            
+                            currentIndex++; // الانتقال للملف التالي
+                            setTimeout(runAndCheck, 1000); // استراحة ثانيتين قبل البدء بالملف الجديد
+                        }
+                        // الحالة الثانية: فشلت العملية وظهرت كلمة failed
+                        else if (src.includes("failed.png")) {
+                            statusFound = true;
+                            clearInterval(checkInterval);
+                            console.log(`❌ فشل البايلود رقم ${currentIndex + 1} (ظهرت failed.png)، جاري إعادة المحاولة...`);
+                            
+                            // إعادة المحاولة لنفس الملف بعد ثانية ونصف
+                            setTimeout(function() {
+                                runAndCheck();
+                            }, 500);
+                        }
+                    });
+
+                }, 1000); // يفحص حالة الصورة كل ثانية
+            }
+
+            // البدء بالعملية
+            runAndCheck();
+
+        }, 1000);
+    });
+</script>
 <script src="syscalls.js"></script>
 
 <script type="module">import { establishPrimitive, fakeCellReleased } from "./core.js?v=10";
