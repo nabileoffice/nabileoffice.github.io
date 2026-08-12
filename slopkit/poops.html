@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>slopkit</title>
@@ -332,7 +331,7 @@ async function loadPoopsModules() {
     flushMark("POOPS-MODULES-LOADED", "deferred-until-after-primitive");
 }
 
-const Q = new URLSearchParams("go=1&auto=1&trigger=netcontrol&payload=1");
+const Q = new URLSearchParams(location.search);
 const ARMED = Q.get("go") === "1";
 const CLEARLATCH = Q.get("clear") === "1";
 
