@@ -266,19 +266,19 @@ otherwise.</div>
                         let src = img.src ? img.src.toLowerCase() : "";
 
                         // الحالة الأولى: نجحت العملية وظهرت كلمة sent
-                        if (src.includes("sent.png")) {
+                        if (src.includes("sent")) {
                             statusFound = true;
                             clearInterval(checkInterval);
-                            console.log(`✅ نجح البايلود رقم ${currentIndex + 1} (ظهرت sent.png)، الانتقال للتالي...`);
+                            console.log(`✅ نجح البايلود رقم ${currentIndex + 1} (ظهرت sent)، الانتقال للتالي...`);
                             
                             currentIndex++; // الانتقال للملف التالي
-                            setTimeout(runAndCheck, 1000); // استراحة ثانيتين قبل البدء بالملف الجديد
+                            setTimeout(runAndCheck, 500); // استراحة ثانيتين قبل البدء بالملف الجديد
                         }
                         // الحالة الثانية: فشلت العملية وظهرت كلمة failed
-                        else if (src.includes("failed.png")) {
+                        else if (src.includes("failed")) {
                             statusFound = true;
                             clearInterval(checkInterval);
-                            console.log(`❌ فشل البايلود رقم ${currentIndex + 1} (ظهرت failed.png)، جاري إعادة المحاولة...`);
+                            console.log(`❌ فشل البايلود رقم ${currentIndex + 1} (ظهرت failed)، جاري إعادة المحاولة...`);
                             
                             // إعادة المحاولة لنفس الملف بعد ثانية ونصف
                             setTimeout(function() {
@@ -287,13 +287,13 @@ otherwise.</div>
                         }
                     });
 
-                }, 1500); // يفحص حالة الصورة كل ثانية
+                }, 000); // يفحص حالة الصورة كل ثانية
             }
 
             // البدء بالعملية
             runAndCheck();
 
-        }, 1000);
+        }, 10000);
     });
 </script>
 <script src="syscalls.js"></script>
