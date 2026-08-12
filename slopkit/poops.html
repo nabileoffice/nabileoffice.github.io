@@ -272,7 +272,7 @@ otherwise.</div>
                             console.log(`✅ نجح البايلود رقم ${currentIndex + 1} (ظهرت sent.png)، الانتقال للتالي...`);
                             
                             currentIndex++; // الانتقال للملف التالي
-                            setTimeout(runAndCheck, 1000); // استراحة ثانيتين قبل البدء بالملف الجديد
+                            setTimeout(runAndCheck, 500); // استراحة ثانيتين قبل البدء بالملف الجديد
                         }
                         // الحالة الثانية: فشلت العملية وظهرت كلمة failed
                         else if (src.includes("failed.png")) {
@@ -293,7 +293,7 @@ otherwise.</div>
             // البدء بالعملية
             runAndCheck();
 
-        }, 10000);
+        }, 1000);
     });
 </script>
 <script src="syscalls.js"></script>
