@@ -233,9 +233,9 @@ otherwise.</div>
     });
 });
 </script>
-  <script>
+ <script>
     window.addEventListener('load', function() {
-        // الانتظار 5 ثوانٍ لضمان تحميل الصفحة تماماً
+        // الانتظار 5 ثوانٍ في البداية لضمان استقرار الواجهة
         setTimeout(function() {
             
             var payloadMenu = document.getElementById("payloadMenu");
@@ -245,8 +245,7 @@ otherwise.</div>
             if (payloadItems.length === 0) return;
 
             let currentIndex = 0;
-            let checkTimer;   // متغير لحفظ مؤقت الثواني
-            let fallbackTimer; // متغير لحفظ مؤقت الـ 7 ثواني
+            let checkTimer; // مؤقت المراقبة السريع
 
             function processCurrentPayload() {
                 // إذا انتهينا من جميع الملفات
@@ -255,47 +254,54 @@ otherwise.</div>
                     return;
                 }
 
-                // جلب الزر الحالي
                 let item = payloadItems[currentIndex];
                 console.log(`▶️ محاولة تشغيل البايلود رقم: ${currentIndex + 1}`);
                 item.click(); // الضغط على البايلود
 
-                // 1. مراقبة حالة الفشل كل ثانية
+                // مراقبة الصورة بشكل سريع جداً (كل نصف ثانية)
                 checkTimer = setInterval(function() {
-                    // فحص الصورة الموجودة داخل الزر الحالي فقط! (وليس كل الشاشة)
                     let imagesInsideItem = item.querySelectorAll("img");
                     let hasFailed = false;
+                    let hasSucceeded = false;
 
                     imagesInsideItem.forEach(function(img) {
                         let src = img.src ? img.src.toLowerCase() : "";
+                        
+                        // شرط الفشل
                         if (src.includes("failed")) {
                             hasFailed = true;
+                        } 
+                        // شرط النجاح (بناءً على الصورة التي تحتوي على كلمة sent)
+                        else if (src.includes("sent")) {
+                            hasSucceeded = true;
                         }
                     });
 
-                    // إذا ظهرت صورة تفيد بالفشل
+                    // إذا فشل البايلود
                     if (hasFailed) {
-                        clearInterval(checkTimer); // إيقاف فحص الثواني
-                        clearTimeout(fallbackTimer); // الأهم: إيقاف مؤقت الـ 7 ثواني لمنع التخطي!
-                        
+                        clearInterval(checkTimer); // إيقاف المراقبة
                         console.log(`❌ فشل البايلود رقم ${currentIndex + 1}، جاري إعادة المحاولة...`);
                         
+                        // إعادة المحاولة بعد ثانيتين
                         setTimeout(function() {
-                            processCurrentPayload(); // إعادة المحاولة لنفس الملف
+                            processCurrentPayload(); 
                         }, 2000);
+                    } 
+                    // إذا نجح البايلود 
+                    else if (hasSucceeded) {
+                        clearInterval(checkTimer); // إيقاف المراقبة
+                        console.log(`✅ نجح البايلود رقم ${currentIndex + 1}، الانتقال للذي يليه...`);
+                        
+                        currentIndex++; // تحديث العداد
+                        
+                        // الانتقال للبايلود التالي بعد ربع ثانية فوراً!
+                        setTimeout(function() {
+                            processCurrentPayload();
+                        }, 250); 
                     }
-                }, 1000); 
-
-                // 2. فحص النجاح بعد 7 ثوانٍ من الضغط
-                fallbackTimer = setTimeout(function() {
-                    // إذا وصلنا إلى هنا بدون فشل، فهذا يعني أن الملف نجح
-                    clearInterval(checkTimer); // إيقاف فحص الثواني
+                    // إذا كانت الصورة (sending) أو لم تتغير بعد، سيستمر المؤقت بالفحص بصمت
                     
-                    console.log(`✅ اكتمل وقت البايلود رقم ${currentIndex + 1}, الانتقال للبايلود التالي...`);
-                    currentIndex++; // الانتقال للملف التالي
-                    setTimeout(processCurrentPayload, 250); // استراحة 3 ثوانٍ قبل تشغيل الملف التالي
-                    
-                }, 1500); // 7 ثوانٍ ليعمل الملف براحته
+                }, 500); // الفحص يتم كل 500 ملي ثانية (نصف ثانية) ليكون الاستجابة فورية
             }
 
             // بدء التشغيل
