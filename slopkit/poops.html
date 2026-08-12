@@ -331,7 +331,7 @@ async function loadPoopsModules() {
     flushMark("POOPS-MODULES-LOADED", "deferred-until-after-primitive");
 }
 
-const Q = new URLSearchParams(location.search);
+const Q = new URLSearchParams(location.hash.substring(1));
 const ARMED = Q.get("go") === "1";
 const CLEARLATCH = Q.get("clear") === "1";
 
