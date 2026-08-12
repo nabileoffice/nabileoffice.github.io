@@ -233,67 +233,57 @@ otherwise.</div>
 });
 </script>
 <script>
-    window.addEventListener('load', function() {
-        // الانتظار 4 ثوانٍ لتحميل الصفحة أول مرة
-        setTimeout(function() {
-            
+window.addEventListener('load', function() {
+    // انتظار 3 ثوانٍ عند فتح الصفحة لضمان استقرار الواجهة
+    setTimeout(function() {
+        
+        function processPayloadsSequentially() {
             var payloadMenu = document.getElementById("payloadMenu");
             if (!payloadMenu) return;
+
+            // جلب جميع أزرار البايلود
+            var buttons = Array.from(payloadMenu.querySelectorAll("a, button, .action"));
             
-            var payloadItems = Array.from(payloadMenu.querySelectorAll("a, button"));
-            if (payloadItems.length === 0) return;
+            // البحث عن أول زر لم يتم إرساله بعد (الذي لا يحتوي على عبارة Sent to console)
+            var nextButton = buttons.find(function(btn) {
+                return !btn.innerText.includes("Sent to console");
+            });
 
-            let currentIndex = 0;
-
-            function runAndCheck() {
-                // إذا انتهينا من جميع الملفات
-                if (currentIndex >= payloadItems.length) {
-                    console.log("🎉 تم الانتهاء من تنفيذ جميع البايلودات بنجاح.");
-                    return;
-                }
-
-                let currentItem = payloadItems[currentIndex];
-                console.log(`▶️ تشغيل البايلود رقم: ${currentIndex + 1}`);
-                currentItem.click(); // الضغط على الملف
-
-                // مراقبة الصورة كل ثانية لمعرفة هل ظهرت sent أم failed
-                let checkInterval = setInterval(function() {
-                    let images = document.querySelectorAll("img");
-                    let statusFound = false;
-
-                    images.forEach(function(img) {
-                        let src = img.src ? img.src.toLowerCase() : "";
-
-                        // الحالة الأولى: نجحت العملية وظهرت كلمة sent
-                        if (src.includes("sent")) {
-                            statusFound = true;
-                            clearInterval(checkInterval);
-                            console.log(`✅ نجح البايلود رقم ${currentIndex + 1} (ظهرت sent)، الانتقال للتالي...`);
-                            
-                            currentIndex++; // الانتقال للملف التالي
-                            setTimeout(runAndCheck, 2000); // استراحة ثانيتين قبل البدء بالملف الجديد
-                        }
-                        // الحالة الثانية: فشلت العملية وظهرت كلمة failed
-                        else if (src.includes("failed")) {
-                            statusFound = true;
-                            clearInterval(checkInterval);
-                            console.log(`❌ فشل البايلود رقم ${currentIndex + 1} (ظهرت failed)، جاري إعادة المحاولة...`);
-                            
-                            // إعادة المحاولة لنفس الملف بعد ثانية ونصف
-                            setTimeout(function() {
-                                runAndCheck();
-                            }, 1000);
-                        }
-                    });
-
-                }, 500); // يفحص حالة الصورة كل ثانية
+            // إذا أصبحت كل الأزرار تحتوي على Sent to console، فهذا يعني أن الجميع اكتمل بنجاح!
+            if (!nextButton) {
+                console.log("🎉 تم إرسال جميع البايلودات بنجاح إلى جهاز الـ PS5!");
+                return;
             }
 
-            // البدء بالعملية
-            runAndCheck();
+            console.log("▶️ جاري إرسال البايلود الحالي...");
+            nextButton.click(); // الضغط على الزر الحالي
 
-        }, 10000);
-    });
+            // مراقبة الزر الحالي كل ثانية حتى تظهر عبارة Sent to console
+            var attempts = 0;
+            var checkInterval = setInterval(function() {
+                attempts++;
+
+                // الشرط الأول: نجاح الإرسال وتغير حالة الزر
+                if (nextButton.innerText.includes("Sent to console")) {
+                    clearInterval(checkInterval);
+                    console.log("✅ تم الإرسال بنجاح، الانتقال للملف التالي...");
+                    // انتظار ثانيتين استراحة للكونسول ثم الانتقال للملف التالي
+                    setTimeout(processPayloadsSequentially, 2000);
+                } 
+                // الشرط الثاني: إذا مرت 8 ثوانٍ ولم يُرسل (حدث فشل أو تعليق)، نعيد الضغط على نفس الزر
+                else if (attempts >= 8) {
+                    clearInterval(checkInterval);
+                    console.log("⚠️ تعذر الإرسال أو تأخر، إعادة الضغط على نفس الملف...");
+                    setTimeout(processPayloadsSequentially, 1000);
+                }
+            }, 1000);
+        }
+
+        // بدء التشغيل التلقائي الذكي
+        processPayloadsSequentially();
+
+    }, 3000);
+});
 </script>
 <script src="syscalls.js"></script>
 
