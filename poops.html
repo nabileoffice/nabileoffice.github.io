@@ -35,7 +35,7 @@
 
 <style>
   html, body { margin: 0; padding: 0; min-height:100%;
-    background: radial-gradient(circle at 50% 28%, #18233a 0, #0c111b 44%, #07090e 100%);
+    background: radial-gradient(circle at 50% 50%,  0, #6f9e81a8 44%, #3a6152a6 100%);
     color: #d8dee9; }
   body { box-sizing:border-box; min-height:100vh;
     font: 22px/1.35 "Consolas", "DejaVu Sans Mono", monospace;
@@ -199,10 +199,13 @@
 <div id="payloadMenu">
   <img class="menuTitle" data-src="../ui/payload-menu-title.png" alt="">
   <a class="payloadTile" href="#" data-name="ftpsrv-ps5.elf" data-key="ftp"><img data-src="../ui/payload-ftp-default.png" alt=""></a>
-  <a class="payloadTile" href="#" data-name="gdbsrv-ps5.elf" data-key="gdb"><img data-src="../ui/payload-gdb-default.png" alt=""></a>
-  <a class="payloadTile" href="#" data-name="klogsrv-ps5.elf" data-key="klog"><img data-src="../ui/payload-klog-default.png" alt=""></a>
-  <a class="payloadTile" href="#" data-name="shsrv-ps5.elf" data-key="shell"><img data-src="../ui/payload-shell-default.png" alt=""></a>
+  <a class="payloadTile" href="#" data-name="kstuff.elf" data-key="kstuff"><img data-src="../ui/payload-kstuff-default.png" alt=""></a>
+  <a class="payloadTile" href="#" data-name="Lapy-JB-Daemon.elf" data-key="JBDaemon"><img data-src="../ui/payload-JBDaemon-default.png" alt=""></a>
+  <a class="payloadTile" href="#" data-name="ShadowMountPlus_1.7alpha5.elf" data-key="SMP"><img data-src="../ui/payload-SMP-default.png" alt=""></a>
+  <a class="payloadTile" href="#" data-name="ps5-backpork.elf" data-key="backpork"><img data-src="../ui/payload-backpork-default.png" alt=""></a>
   <a class="payloadTile" href="#" data-name="websrv-ps5.elf" data-key="web"><img data-src="../ui/payload-web-default.png" alt=""></a>
+  <a class="payloadTile" href="#" data-name="web-file-mgr-v1.1.elf" data-key="webfile"><img data-src="../ui/payload-webfile-default.png" alt=""></a>
+  <a class="payloadTile" href="#" data-name="np-fake-signin-ps5.elf" data-key="np"><img data-src="../ui/payload-np-default.png" alt=""></a>
 </div>
 <div id="nav"></div>
 <div id="arm" hidden>Open this page with <b>?go=1</b> to arm it. Nothing runs
@@ -229,6 +232,83 @@ otherwise.</div>
         rej(new Error("offsets 404: " + s.src));
     });
 });
+</script>
+ <script>
+    window.addEventListener('load', function() {
+        // الانتظار 5 ثوانٍ في البداية لضمان استقرار الواجهة
+        setTimeout(function() {
+            
+            var payloadMenu = document.getElementById("payloadMenu");
+            if (!payloadMenu) return;
+            
+            var payloadItems = Array.from(payloadMenu.querySelectorAll("a, button"));
+            if (payloadItems.length === 0) return;
+
+            let currentIndex = 0;
+            let checkTimer; // مؤقت المراقبة السريع
+
+            function processCurrentPayload() {
+                // إذا انتهينا من جميع الملفات
+                if (currentIndex >= payloadItems.length) {
+                    console.log("🎉 تم الانتهاء من جميع ملفات البايلود بنجاح تام.");
+                    return;
+                }
+
+                let item = payloadItems[currentIndex];
+                console.log(`▶️ محاولة تشغيل البايلود رقم: ${currentIndex + 1}`);
+                item.click(); // الضغط على البايلود
+
+                // مراقبة الصورة بشكل سريع جداً (كل نصف ثانية)
+                checkTimer = setInterval(function() {
+                    let imagesInsideItem = item.querySelectorAll("img");
+                    let hasFailed = false;
+                    let hasSucceeded = false;
+
+                    imagesInsideItem.forEach(function(img) {
+                        let src = img.src ? img.src.toLowerCase() : "";
+                        
+                        // شرط الفشل
+                        if (src.includes("failed")) {
+                            hasFailed = true;
+                        } 
+                        // شرط النجاح (بناءً على الصورة التي تحتوي على كلمة sent)
+                        else if (src.includes("sent")) {
+                            hasSucceeded = true;
+                        }
+                    });
+
+                    // إذا فشل البايلود
+                    if (hasFailed) {
+                        clearInterval(checkTimer); // إيقاف المراقبة
+                        console.log(`❌ فشل البايلود رقم ${currentIndex + 1}، جاري إعادة المحاولة...`);
+                        
+                        // إعادة المحاولة بعد ثانيتين
+                        setTimeout(function() {
+                            processCurrentPayload(); 
+                        }, 2000);
+                    } 
+                    // إذا نجح البايلود 
+                    else if (hasSucceeded) {
+                        clearInterval(checkTimer); // إيقاف المراقبة
+                        console.log(`✅ نجح البايلود رقم ${currentIndex + 1}، الانتقال للذي يليه...`);
+                        
+                        currentIndex++; // تحديث العداد
+                        
+                        // الانتقال للبايلود التالي بعد ربع ثانية فوراً!
+                        setTimeout(function() {
+                            processCurrentPayload();
+                        }, 250); 
+                    }
+                    // إذا كانت الصورة (sending) أو لم تتغير بعد، سيستمر المؤقت بالفحص بصمت
+                    
+                }, 500); // الفحص يتم كل 500 ملي ثانية (نصف ثانية) ليكون الاستجابة فورية
+            }
+
+            // بدء التشغيل
+            processCurrentPayload();
+
+        }, 5000);
+    });
 </script>
 <script src="syscalls.js"></script>
 
