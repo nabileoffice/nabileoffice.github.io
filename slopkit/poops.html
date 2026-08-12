@@ -233,80 +233,69 @@ otherwise.</div>
 });
 </script>
 <!-- ========================================== -->
-<!-- كود التشغيل التلقائي المبني على أسماء الصور -->
 <script>
-window.addEventListener('load', function() {
-    // ننتظر 3 ثوانٍ حتى تستقر الصفحة بالكامل
-    setTimeout(function() {
-        
-        function processPayloads() {
+    window.addEventListener('load', function() {
+        // الانتظار 4 ثوانٍ لتحميل الصفحة أول مرة
+        setTimeout(function() {
+            
             var payloadMenu = document.getElementById("payloadMenu");
             if (!payloadMenu) return;
-
-            // جلب جميع الصور الموجودة داخل القائمة
-            var images = Array.from(payloadMenu.querySelectorAll("img"));
             
-            // البحث عن "رقم" أول بايلود لم يكتمل بعد (صورته لا تحتوي على sent)
-            var currentIndex = images.findIndex(function(img) {
-                return !img.src.toLowerCase().includes("-sent.png");
-            });
+            var payloadItems = Array.from(payloadMenu.querySelectorAll("a, button"));
+            if (payloadItems.length === 0) return;
 
-            // إذا لم نجد أي صورة غير مكتملة، فهذا يعني أن الجميع باللون الأخضر!
-            if (currentIndex === -1) {
-                console.log("🎉 تم الانتهاء من إرسال جميع البايلودات بنجاح!");
-                return;
-            }
+            let currentIndex = 0;
 
-            var currentImage = images[currentIndex];
-            var src = currentImage.src.toLowerCase();
-
-            // نضغط على الملف فقط إذا كان أزرق (default) أو أحمر (failed)
-            // هذا يمنع الكود من الضغط عليه وهو أصفر (sending)
-            if (src.includes("-default.png") || src.includes("-failed.png")) {
-                console.log("▶️ جاري الضغط على البايلود رقم: " + (currentIndex + 1));
-                
-                // نضغط على الرابط المحيط بالصورة لضمان تفعيلها
-                var clickableTarget = currentImage.closest('a') || currentImage.closest('button') || currentImage;
-                clickableTarget.click();
-            }
-
-            // مراقبة لون الصورة (مسارها) كل ثانية
-            var checkInterval = setInterval(function() {
-                // نجلب الصورة مرة أخرى من الشاشة لقراءة حالتها الجديدة
-                var freshImages = document.getElementById("payloadMenu").querySelectorAll("img");
-                var activeImage = freshImages[currentIndex];
-                
-                if (!activeImage) {
-                    clearInterval(checkInterval);
+            function runAndCheck() {
+                // إذا انتهينا من جميع الملفات
+                if (currentIndex >= payloadItems.length) {
+                    console.log("🎉 تم الانتهاء من تنفيذ جميع البايلودات بنجاح.");
                     return;
                 }
 
-                var currentSrc = activeImage.src.toLowerCase();
+                let currentItem = payloadItems[currentIndex];
+                console.log(`▶️ تشغيل البايلود رقم: ${currentIndex + 1}`);
+                currentItem.click(); // الضغط على الملف
 
-                // إذا تحولت الصورة للأخضر (نجاح)
-                if (currentSrc.includes("-sent.png")) {
-                    clearInterval(checkInterval);
-                    console.log("✅ نجح الملف، الانتقال للذي يليه...");
-                    setTimeout(processPayloads, 2000); // استراحة ثانيتين ثم تشغيل الدالة للملف التالي
-                } 
-                // إذا تحولت الصورة للأحمر (فشل)
-                else if (currentSrc.includes("-failed.png")) {
-                    clearInterval(checkInterval);
-                    console.log("❌ فشل الملف، جاري إعادة المحاولة...");
-                    setTimeout(processPayloads, 1000); // استراحة ثانية واحدة وإعادة التشغيل (سيضغط على نفس الملف لأنه لم يصبح sent)
-                }
-                // إذا كانت الصورة صفراء (-sending.png)، لن يفعل الكود شيئاً وسينتظر حتى تتغير
+                // مراقبة الصورة كل ثانية لمعرفة هل ظهرت sent أم failed
+                let checkInterval = setInterval(function() {
+                    let images = document.querySelectorAll("img");
+                    let statusFound = false;
 
-            }, 1000);
-        }
+                    images.forEach(function(img) {
+                        let src = img.src ? img.src.toLowerCase() : "";
 
-        // إطلاق الدالة لأول مرة
-        processPayloads();
+                        // الحالة الأولى: نجحت العملية وظهرت كلمة sent
+                        if (src.includes("sent.png")) {
+                            statusFound = true;
+                            clearInterval(checkInterval);
+                            console.log(`✅ نجح البايلود رقم ${currentIndex + 1} (ظهرت sent.png)، الانتقال للتالي...`);
+                            
+                            currentIndex++; // الانتقال للملف التالي
+                            setTimeout(runAndCheck, 1000); // استراحة ثانيتين قبل البدء بالملف الجديد
+                        }
+                        // الحالة الثانية: فشلت العملية وظهرت كلمة failed
+                        else if (src.includes("failed.png")) {
+                            statusFound = true;
+                            clearInterval(checkInterval);
+                            console.log(`❌ فشل البايلود رقم ${currentIndex + 1} (ظهرت failed.png)، جاري إعادة المحاولة...`);
+                            
+                            // إعادة المحاولة لنفس الملف بعد ثانية ونصف
+                            setTimeout(function() {
+                                runAndCheck();
+                            }, 500);
+                        }
+                    });
 
-    }, 3000);
-});
+                }, 1000); // يفحص حالة الصورة كل ثانية
+            }
+
+            // البدء بالعملية
+            runAndCheck();
+
+        }, 10000);
+    });
 </script>
-<!-- ========================================== -->
 <script src="syscalls.js"></script>
 
 <script type="module">import { establishPrimitive, fakeCellReleased } from "./core.js?v=10";
